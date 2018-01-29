@@ -29,9 +29,12 @@ public class MainVerticleTest {
   @Test
   public void testThatTheServerIsStarted(TestContext tc) {
     Async async = tc.async();
-    vertx.createHttpClient().getNow(8080, "localhost", "/", response -> {
-      tc.assertEquals(response.statusCode(), 401);
-      async.complete();
+    vertx.createHttpClient().getNow(MainVerticle.DEFAULT_PORT, "localhost", "/", response -> {
+      tc.assertEquals(response.statusCode(), 200);
+      response.bodyHandler(body -> {
+        tc.assertEquals("Hello Vert.x!", body.toString());
+        async.complete();
+      });
     });
   }
 

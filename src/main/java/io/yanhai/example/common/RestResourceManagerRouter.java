@@ -2,6 +2,7 @@ package io.yanhai.example.common;
 
 import java.util.function.Function;
 
+import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
@@ -14,11 +15,11 @@ public interface RestResourceManagerRouter {
 
   String DEFAULT_CONTENT_TYPE = "application/json";
 
-  static Router router(Vertx vertx, ResourceManager resourceManager, Function<String, JsonObject> convert) {
+  static Router router(Vertx vertx, ResourceManager resourceManager, Function<String, JsonObject> requestBodyConvert) {
     Router router = Router.router(vertx);
 
     router.get("/:id").handler(ctx -> {
-      String id = ctx.pathParam("id");
+      @Nullable String id = ctx.pathParam("id");
 
       resourceManager.findOne(id, ar -> {
         if (ar.failed()) {
@@ -52,7 +53,7 @@ public interface RestResourceManagerRouter {
     });
 
     router.post().handler(ctx -> {
-      JsonObject body = convert.apply(ctx.getBodyAsString());
+      @Nullable JsonObject body = requestBodyConvert.apply(ctx.getBodyAsString());
 
       if (body == null) {
         ctx.fail(400);
@@ -76,8 +77,8 @@ public interface RestResourceManagerRouter {
     });
 
     router.put("/:id").handler(ctx -> {
-      String id = ctx.pathParam("id");
-      JsonObject body = convert.apply(ctx.getBodyAsString());
+      @Nullable String id = ctx.pathParam("id");
+      @Nullable JsonObject body = requestBodyConvert.apply(ctx.getBodyAsString());
 
       if (body == null) {
         ctx.fail(400);
@@ -106,7 +107,7 @@ public interface RestResourceManagerRouter {
     });
 
     router.delete("/:id").handler(ctx -> {
-      String id = ctx.pathParam("id");
+      @Nullable String id = ctx.pathParam("id");
 
       resourceManager.delete(id, ar -> {
         if (ar.failed()) {

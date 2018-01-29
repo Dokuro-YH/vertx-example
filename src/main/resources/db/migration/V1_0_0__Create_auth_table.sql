@@ -1,20 +1,20 @@
-CREATE TABLE "USER" (
-  USERNAME VARCHAR(255) NOT NULL,
-  PASSWORD VARCHAR(255) NOT NULL,
-  PASSWORD_SALT VARCHAR(255) NOT NULL,
-  CONSTRAINT pk_username PRIMARY KEY (USERNAME)
+create table "user" (
+  username varchar(255) not null,
+  password varchar(255) not null,
+  password_salt varchar(255) not null,
+  constraint pk_username primary key (username)
 );
 
-CREATE TABLE USER_ROLES (
-  USERNAME VARCHAR(255) NOT NULL,
-  ROLE VARCHAR(255) NOT NULL,
-  CONSTRAINT pk_user_roles PRIMARY KEY (USERNAME, ROLE),
-  CONSTRAINT fk_username FOREIGN KEY (USERNAME) REFERENCES "USER"(USERNAME)
+create table user_roles (
+  username varchar(255) not null,
+  role varchar(255) not null,
+  constraint pk_user_roles primary key (username, role),
+  constraint fk_username foreign key (username) references "user"(username)
 );
 
-CREATE TABLE ROLES_PERMS (
-  ROLE VARCHAR(255) NOT NULL,
-  PERM VARCHAR(255) NOT NULL,
-  CONSTRAINT pk_roles_perms PRIMARY KEY (ROLE),
-  CONSTRAINT fk_roles FOREIGN KEY (ROLE) REFERENCES roles_perms(ROLE)
+create table roles_perms (
+  role varchar(255) not null,
+  perm varchar(255) not null,
+  constraint pk_roles_perms primary key (role),
+  constraint fk_roles foreign key (role) references roles_perms(role)
 );

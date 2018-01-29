@@ -59,17 +59,17 @@ public class JsonLoginHandlerImpl implements JsonLoginHandler {
           log.warn("No username or password provided in body - did you forget to include a BodyHandler?");
           context.fail(401);
         } else {
-          Session session = context.session();
           JsonObject authInfo = new JsonObject().put("username", username).put("password", password);
           authProvider.authenticate(authInfo, res -> {
             if (res.succeeded()) {
               User user = res.result();
               context.setUser(user);
+
+              Session session = context.session();
               if (session != null) {
-                // 更新SessionID
                 session.regenerateId();
               }
-              // 返回 principal 信息
+
               context.response()
                   .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                   .end(user.principal().encode());

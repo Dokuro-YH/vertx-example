@@ -15,7 +15,6 @@ import io.vertx.ext.auth.jdbc.JDBCAuth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.SessionHandler;
@@ -23,12 +22,15 @@ import io.vertx.ext.web.handler.UserSessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.yanhai.example.common.RestResourceManagerRouter;
 import io.yanhai.example.user.jdbc.JdbcUserManager;
+import io.yanhai.example.web.auth.AuthorizeRequestHandler;
 import io.yanhai.example.web.login.JsonLoginHandler;
 import io.yanhai.example.web.login.LogoutHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
   static final Logger log = LoggerFactory.getLogger(MainVerticle.class);
+
+  public static final int DEFAULT_PORT = 8080;
 
   JDBCClient jdbcClient;
 
@@ -45,7 +47,7 @@ public class MainVerticle extends AbstractVerticle {
     jdbcClient = JDBCClient.createShared(vertx, config);
     authProvider = JDBCAuth.create(vertx, jdbcClient);
 
-    authProvider.setAuthenticationQuery("SELECT PASSWORD, PASSWORD_SALT FROM \"USER\" WHERE USERNAME = ?");
+    authProvider.setAuthenticationQuery("select password, password_salt from \"user\" where username = ?");
 
     initDatabase(config.getString("url"), config.getString("user"), config.getString("password"))
         .compose(this::existsAdminUser)
@@ -85,7 +87,7 @@ public class MainVerticle extends AbstractVerticle {
       if (ar.succeeded()) {
         SQLConnection conn = ar.result();
 
-        conn.querySingleWithParams("SELECT COUNT(0) FROM \"USER\" WHERE USERNAME=?", queryParams, res -> {
+        conn.querySingleWithParams("select count(0) from \"user\" where username=?", queryParams, res -> {
           if (res.succeeded()) {
             fut.complete(res.result().getInteger(0) > 0);
           } else {
@@ -119,7 +121,7 @@ public class MainVerticle extends AbstractVerticle {
       if (ar.succeeded()) {
         SQLConnection conn = ar.result();
 
-        conn.updateWithParams("INSERT INTO \"USER\" VALUES (?, ?, ?)", insertParams, res -> {
+        conn.updateWithParams("insert into \"user\" values (?, ?, ?)", insertParams, res -> {
           if (res.succeeded()) {
             fut.complete();
           } else {
@@ -152,14 +154,12 @@ public class MainVerticle extends AbstractVerticle {
     // 登录授权
     router.post("/login").handler(JsonLoginHandler.create(authProvider));
     router.post("/logout").handler(LogoutHandler.create());
-    // TODO 自定义授权失败 handler 替换 BasicAuthHandler
-    router.route().handler(BasicAuthHandler.create(authProvider));
 
-    // user manager router
-    JdbcUserManager userManager = JdbcUserManager.create(authProvider, jdbcClient);
-    Router userManagerRouter = RestResourceManagerRouter.router(vertx, userManager,
+    // 用户管理路由
+    Router userManagerRouter = RestResourceManagerRouter.router(vertx,
+        JdbcUserManager.create(authProvider, jdbcClient),
         s -> s == null || s.isEmpty() ? null : new JsonObject(s));
-    // TODO 模块化控制路由权限，删除全局授权失败 handler
+    router.route("/users").handler(AuthorizeRequestHandler.create("role:admin"));
     router.mountSubRouter("/users", userManagerRouter);
 
     router.get().handler(req -> {
@@ -175,7 +175,7 @@ public class MainVerticle extends AbstractVerticle {
 
     vertx.createHttpServer()
         .requestHandler(router::accept)
-        .listen(8080, fut.completer());
+        .listen(config().getInteger("http.port", DEFAULT_PORT), fut.completer());
 
     return fut;
   }
