@@ -15,7 +15,7 @@ import io.vertx.ext.sql.UpdateResult;
 /**
  * @author yanhai
  */
-public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
+public abstract class JdbcResourceManagerImpl<T> implements JdbcResourceManager<T> {
 
   protected final JDBCClient jdbcClient;
 
@@ -26,31 +26,31 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
   protected String deleteSQL;
 
   @Override
-  public JdbcResourceManagerImpl setFindOneSQL(String findOneSQL) {
+  public JdbcResourceManagerImpl<T> setFindOneSQL(String findOneSQL) {
     this.findOneSQL = findOneSQL;
     return this;
   }
 
   @Override
-  public JdbcResourceManagerImpl setFindAllSQL(String findAllSQL) {
+  public JdbcResourceManagerImpl<T> setFindAllSQL(String findAllSQL) {
     this.findAllSQL = findAllSQL;
     return this;
   }
 
   @Override
-  public JdbcResourceManagerImpl setCreateSQL(String createSQL) {
+  public JdbcResourceManagerImpl<T> setCreateSQL(String createSQL) {
     this.createSQL = createSQL;
     return this;
   }
 
   @Override
-  public JdbcResourceManagerImpl setUpdateSQL(String updateSQL) {
+  public JdbcResourceManagerImpl<T> setUpdateSQL(String updateSQL) {
     this.updateSQL = updateSQL;
     return this;
   }
 
   @Override
-  public JdbcResourceManagerImpl setDeleteSQL(String deleteSQL) {
+  public JdbcResourceManagerImpl<T> setDeleteSQL(String deleteSQL) {
     this.deleteSQL = deleteSQL;
     return this;
   }
@@ -66,7 +66,7 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
   }
 
   @Override
-  public void findOne(String id, Handler<AsyncResult<JsonObject>> handler) {
+  public void findOne(String id, Handler<AsyncResult<T>> handler) {
     jdbcClient.getConnection(ar -> {
       if (ar.failed()) {
         handler.handle(Future.failedFuture(ar.cause()));
@@ -117,6 +117,7 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
           if (rs != null) {
             rs.getResults().stream()
                 .map(this::mapRow)
+                .map(JsonObject::mapFrom)
                 .forEach(row -> result.add(row));
           }
 
@@ -129,12 +130,12 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
   }
 
   @Override
-  public void create(JsonObject t) {
+  public void create(T t) {
     this.create(t, null);
   }
 
   @Override
-  public void create(JsonObject t, Handler<AsyncResult<JsonObject>> handler) {
+  public void create(T t, Handler<AsyncResult<T>> handler) {
     jdbcClient.getConnection(ar -> {
       if (ar.failed()) {
         handler.handle(Future.failedFuture(ar.cause()));
@@ -164,12 +165,12 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
   }
 
   @Override
-  public void update(String id, JsonObject t) {
+  public void update(String id, T t) {
     this.update(id, t, null);
   }
 
   @Override
-  public void update(String id, JsonObject t, Handler<AsyncResult<JsonObject>> handler) {
+  public void update(String id, T t, Handler<AsyncResult<T>> handler) {
     jdbcClient.getConnection(ar -> {
       if (ar.failed()) {
         handler.handle(Future.failedFuture(ar.cause()));
@@ -203,14 +204,14 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
   }
 
   @Override
-  public void delete(String id, Handler<AsyncResult<JsonObject>> handler) {
+  public void delete(String id, Handler<AsyncResult<T>> handler) {
     findOne(id, ar -> {
       if (ar.failed()) {
         handler.handle(Future.failedFuture(ar.cause()));
         return;
       }
 
-      JsonObject t = ar.result();
+      T t = ar.result();
 
       if (t != null) {
         jdbcClient.getConnection(connAr -> {
@@ -237,12 +238,12 @@ public abstract class JdbcResourceManagerImpl implements JdbcResourceManager {
     });
   }
 
-  abstract protected JsonObject mapRow(JsonArray json);
+  abstract protected T mapRow(JsonArray row);
 
-  abstract protected JsonArray convertToCreateParams(JsonObject json);
+  abstract protected JsonArray convertToCreateParams(T t);
 
-  abstract protected JsonArray convertToUpdateParams(String id, JsonObject json);
+  abstract protected JsonArray convertToUpdateParams(String id, T t);
 
-  abstract protected String generateId(JsonObject json);
+  abstract protected String generateId(T t);
 
 }

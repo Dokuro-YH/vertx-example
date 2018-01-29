@@ -4,27 +4,26 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 /**
  * @author yanhai
  */
 @VertxGen
-public interface ResourceManager {
+public interface ResourceManager<T> {
 
-  void findOne(String id, Handler<AsyncResult<JsonObject>> handler);
+  void findOne(String id, Handler<AsyncResult<T>> handler);
 
   void findAll(Handler<AsyncResult<JsonArray>> handler);
 
-  void create(JsonObject t);
+  void create(T t);
 
-  void create(JsonObject t, Handler<AsyncResult<JsonObject>> handler);
+  void create(T t, Handler<AsyncResult<T>> handler);
 
-  void update(String id, JsonObject t);
+  void update(String id, T t);
 
-  void update(String id, JsonObject t, Handler<AsyncResult<JsonObject>> handler);
+  void update(String id, T t, Handler<AsyncResult<T>> handler);
 
   void delete(String id);
 
-  void delete(String id, Handler<AsyncResult<JsonObject>> handler);
+  void delete(String id, Handler<AsyncResult<T>> handler);
 }

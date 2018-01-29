@@ -21,7 +21,7 @@ public class MainVerticle extends AbstractVerticle {
 
   static final Logger log = LoggerFactory.getLogger(MainVerticle.class);
 
-  public static final int DEFAULT_PORT = 8080;
+  public static final int DEFAULT_PORT = 8081;
 
   JDBCClient jdbcClient;
 

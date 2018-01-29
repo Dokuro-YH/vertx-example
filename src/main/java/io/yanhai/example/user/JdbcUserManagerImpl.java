@@ -1,7 +1,6 @@
-package io.yanhai.example.user.jdbc;
+package io.yanhai.example.user;
 
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jdbc.JDBCAuth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.yanhai.example.common.JdbcResourceManagerImpl;
@@ -9,7 +8,7 @@ import io.yanhai.example.common.JdbcResourceManagerImpl;
 /**
  * @author yanhai
  */
-public class JdbcUserManagerImpl extends JdbcResourceManagerImpl implements JdbcUserManager {
+public class JdbcUserManagerImpl extends JdbcResourceManagerImpl<User> implements JdbcUserManager {
 
   private final JDBCAuth authProvider;
 
@@ -20,9 +19,9 @@ public class JdbcUserManagerImpl extends JdbcResourceManagerImpl implements Jdbc
   }
 
   @Override
-  protected JsonArray convertToCreateParams(JsonObject json) {
-    String username = json.getString("username");
-    String password = json.getString("password");
+  protected JsonArray convertToCreateParams(User user) {
+    String username = user.getUsername();
+    String password = user.getPassword();
     String salt = authProvider.generateSalt();
     String hash = authProvider.computeHash(password, salt);
 
@@ -30,8 +29,8 @@ public class JdbcUserManagerImpl extends JdbcResourceManagerImpl implements Jdbc
   }
 
   @Override
-  protected JsonArray convertToUpdateParams(String username, JsonObject json) {
-    String password = json.getString("password");
+  protected JsonArray convertToUpdateParams(String username, User user) {
+    String password = user.getPassword();
     String salt = authProvider.generateSalt();
     String hash = authProvider.computeHash(password, salt);
 
@@ -39,14 +38,13 @@ public class JdbcUserManagerImpl extends JdbcResourceManagerImpl implements Jdbc
   }
 
   @Override
-  protected String generateId(JsonObject json) {
-    return json.getString("username");
+  protected String generateId(User user) {
+    return user.getUsername();
   }
 
   @Override
-  protected JsonObject mapRow(JsonArray json) {
-    return new JsonObject()
-        .put("username", json.getString(0));
+  protected User mapRow(JsonArray json) {
+    return new User(json.getString(0), null);
   }
 
 }

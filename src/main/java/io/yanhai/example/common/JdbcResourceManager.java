@@ -7,21 +7,21 @@ import io.vertx.codegen.annotations.VertxGen;
  * @author yanhai
  */
 @VertxGen
-public interface JdbcResourceManager extends ResourceManager {
+public interface JdbcResourceManager<T> extends ResourceManager<T> {
 
   @Fluent
-  JdbcResourceManager setFindOneSQL(String findOneSQL);
+  JdbcResourceManager<T> setFindOneSQL(String findOneSQL);
 
   @Fluent
-  JdbcResourceManager setFindAllSQL(String findAllSQL);
+  JdbcResourceManager<T> setFindAllSQL(String findAllSQL);
 
   @Fluent
-  JdbcResourceManager setCreateSQL(String createSQL);
+  JdbcResourceManager<T> setCreateSQL(String createSQL);
 
   @Fluent
-  JdbcResourceManager setUpdateSQL(String updateSQL);
+  JdbcResourceManager<T> setUpdateSQL(String updateSQL);
 
   @Fluent
-  JdbcResourceManager setDeleteSQL(String deleteSQL);
+  JdbcResourceManager<T> setDeleteSQL(String deleteSQL);
 
 }

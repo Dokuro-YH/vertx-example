@@ -5,7 +5,7 @@ import java.util.function.Function;
 import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 
 /**
@@ -15,7 +15,8 @@ public interface RestResourceManagerRouter {
 
   String DEFAULT_CONTENT_TYPE = "application/json";
 
-  static Router router(Vertx vertx, ResourceManager resourceManager, Function<String, JsonObject> requestBodyConvert) {
+  static <T> Router router(Vertx vertx, ResourceManager<T> resourceManager,
+      Function<String, T> requestBodyConvert) {
     Router router = Router.router(vertx);
 
     router.get("/:id").handler(ctx -> {
@@ -34,7 +35,7 @@ public interface RestResourceManagerRouter {
 
         ctx.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-            .end(ar.result().encode());
+            .end(Json.encode(ar.result()));
       });
     });
 
@@ -48,12 +49,12 @@ public interface RestResourceManagerRouter {
 
         ctx.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-            .end(ar.result().encode());
+            .end(Json.encode(ar.result()));
       });
     });
 
     router.post().handler(ctx -> {
-      @Nullable JsonObject body = requestBodyConvert.apply(ctx.getBodyAsString());
+      @Nullable T body = requestBodyConvert.apply(ctx.getBodyAsString());
 
       if (body == null) {
         ctx.fail(400);
@@ -72,13 +73,13 @@ public interface RestResourceManagerRouter {
 
         ctx.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-            .end(ar.result().encode());
+            .end(Json.encode(ar.result()));
       });
     });
 
     router.put("/:id").handler(ctx -> {
       @Nullable String id = ctx.pathParam("id");
-      @Nullable JsonObject body = requestBodyConvert.apply(ctx.getBodyAsString());
+      @Nullable T body = requestBodyConvert.apply(ctx.getBodyAsString());
 
       if (body == null) {
         ctx.fail(400);
@@ -102,7 +103,7 @@ public interface RestResourceManagerRouter {
 
         ctx.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-            .end(ar.result().encode());
+            .end(Json.encode(ar.result()));
       });
     });
 
@@ -124,7 +125,7 @@ public interface RestResourceManagerRouter {
         } else {
           ctx.response()
               .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-              .end(ar.result().encode());
+              .end(Json.encode(ar.result()));
         }
       });
     });

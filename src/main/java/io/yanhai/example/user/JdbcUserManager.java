@@ -1,4 +1,4 @@
-package io.yanhai.example.user.jdbc;
+package io.yanhai.example.user;
 
 import io.vertx.ext.auth.jdbc.JDBCAuth;
 import io.vertx.ext.jdbc.JDBCClient;
@@ -7,7 +7,7 @@ import io.yanhai.example.common.JdbcResourceManager;
 /**
  * @author yanhai
  */
-public interface JdbcUserManager extends JdbcResourceManager {
+public interface JdbcUserManager extends JdbcResourceManager<User> {
 
   String DEFAULT_FIND_ONE_SQL = "select username, password from \"user\" where username = ?";
   String DEFAULT_FIND_ALL_SQL = "select username, password from \"user\"";

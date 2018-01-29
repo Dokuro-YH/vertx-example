@@ -1,7 +1,6 @@
 package io.yanhai.example.web.api;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jdbc.JDBCAuth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
@@ -11,7 +10,8 @@ import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.UserSessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.yanhai.example.common.RestResourceManagerRouter;
-import io.yanhai.example.user.jdbc.JdbcUserManager;
+import io.yanhai.example.user.JdbcUserManager;
+import io.yanhai.example.user.User;
 import io.yanhai.example.web.auth.AuthorizeRequestHandler;
 import io.yanhai.example.web.login.JsonLoginHandler;
 import io.yanhai.example.web.login.LogoutHandler;
@@ -38,7 +38,7 @@ public interface APIRouter {
     // 用户管理路由
     Router userManagerRouter = RestResourceManagerRouter.router(vertx,
         JdbcUserManager.create(authProvider, jdbcClient),
-        s -> s == null || s.isEmpty() ? null : new JsonObject(s));
+        s -> s == null || s.isEmpty() ? null : new User(s));
     router.route("/users").handler(AuthorizeRequestHandler.create("role:admin"));
     router.mountSubRouter("/users", userManagerRouter);
 
