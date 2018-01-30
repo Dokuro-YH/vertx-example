@@ -1,9 +1,8 @@
-package io.yanhai.example.web.auth;
+package io.yanhai.example.util;
 
 import java.util.function.Function;
 
 import io.vertx.codegen.annotations.Nullable;
-import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Handler;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
@@ -11,10 +10,9 @@ import io.vertx.ext.web.RoutingContext;
 /**
  * @author yanhai
  */
-@VertxGen
-public interface AuthorizeRequestHandler extends Handler<RoutingContext> {
+public interface AuthorizeRequestUtils {
 
-  static AuthorizeRequestHandler create(final Function<User, Boolean> checkAuth) {
+  static Handler<RoutingContext> create(final Function<User, Boolean> checkAuth) {
     return context -> {
       @Nullable User user = context.user();
       if (user == null) {
@@ -30,7 +28,7 @@ public interface AuthorizeRequestHandler extends Handler<RoutingContext> {
     };
   }
 
-  static AuthorizeRequestHandler create(final String authority) {
+  static Handler<RoutingContext> create(final String authority) {
     return context -> {
       @Nullable User user = context.user();
       if (user == null) {

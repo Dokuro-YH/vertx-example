@@ -1,4 +1,4 @@
-package io.yanhai.example.web.login;
+package io.yanhai.example.login;
 
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;

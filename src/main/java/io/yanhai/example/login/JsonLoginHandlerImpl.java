@@ -1,4 +1,4 @@
-package io.yanhai.example.web.login;
+package io.yanhai.example.login;
 
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;

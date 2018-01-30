@@ -1,4 +1,4 @@
-package io.yanhai.example.web.login;
+package io.yanhai.example.login;
 
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.VertxGen;

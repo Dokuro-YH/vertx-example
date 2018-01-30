@@ -1,8 +1,5 @@
 package io.yanhai.example;
 
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
@@ -15,13 +12,21 @@ import io.vertx.ext.auth.jdbc.JDBCAuth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Router;
-import io.yanhai.example.web.api.APIRouter;
+import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CookieHandler;
+import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.handler.UserSessionHandler;
+import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.yanhai.example.login.JsonLoginHandler;
+import io.yanhai.example.login.LogoutHandler;
+import io.yanhai.example.user.UserService;
+import io.yanhai.example.util.FlywayDatabase;
 
 public class MainVerticle extends AbstractVerticle {
 
   static final Logger log = LoggerFactory.getLogger(MainVerticle.class);
 
-  public static final int DEFAULT_PORT = 8081;
+  public static final int DEFAULT_PORT = 8080;
 
   JDBCClient jdbcClient;
 
@@ -40,7 +45,7 @@ public class MainVerticle extends AbstractVerticle {
 
     authProvider.setAuthenticationQuery("select password, password_salt from \"user\" where username = ?");
 
-    initDatabase(config.getString("url"), config.getString("user"), config.getString("password"))
+    FlywayDatabase.migrate(config.getString("url"), config.getString("user"), config.getString("password"))
         .compose(this::existsAdminUser)
         .compose(this::initAdminUser)
         .compose(this::startHttpServer)
@@ -52,22 +57,6 @@ public class MainVerticle extends AbstractVerticle {
             startFuture.fail(ar.cause());
           }
         });
-  }
-
-  private Future<Void> initDatabase(String url, String user, String password) {
-    Future<Void> fut = Future.future();
-
-    try {
-      log.info("initializing database...");
-      Flyway flyway = new Flyway();
-      flyway.setDataSource(url, user, password);
-      flyway.migrate();
-      fut.complete();
-    } catch (FlywayException e) {
-      fut.fail(e);
-    }
-
-    return fut;
   }
 
   private Future<Boolean> existsAdminUser(Void v) {
@@ -134,8 +123,7 @@ public class MainVerticle extends AbstractVerticle {
     final Future<HttpServer> fut = Future.future();
 
     Router router = Router.router(vertx);
-
-    router.mountSubRouter("/api", APIRouter.create(vertx, authProvider, jdbcClient));
+    router.mountSubRouter("/api", apiRouter());
 
     router.get().handler(req -> {
       final String msg;
@@ -153,5 +141,26 @@ public class MainVerticle extends AbstractVerticle {
         .listen(config().getInteger("http.port", DEFAULT_PORT), fut.completer());
 
     return fut;
+  }
+
+  private Router apiRouter() {
+    Router router = Router.router(vertx);
+
+    // router.route().handler(LoggerHandler.create());
+    router.route().handler(BodyHandler.create());
+    router.route().handler(CookieHandler.create());
+    // TODO SessionHandler 如果返回状态码不是 2xx or 3xx，会自动删除cookie（应该是出于安全考虑）
+    router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
+    router.route().handler(UserSessionHandler.create(authProvider));
+
+    // 登录授权
+    router.post("/login").handler(JsonLoginHandler.create(authProvider));
+    router.post("/logout").handler(LogoutHandler.create());
+
+    // 用户管理
+    UserService userService = UserService.create(authProvider, jdbcClient);
+    router.mountSubRouter("/users", UserService.router(vertx, userService));
+
+    return router;
   }
 }
